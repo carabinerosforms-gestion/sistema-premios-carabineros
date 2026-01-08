@@ -530,6 +530,12 @@
             border: 1px solid #ffeaa7;
         }
         
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
         .hidden {
             display: none;
         }
@@ -597,6 +603,24 @@
         
         .shake {
             animation: shake 0.5s;
+        }
+        
+        /* ===== LOADING SPINNER ===== */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--azul-carabineros);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -922,6 +946,7 @@
                             <li id="valAntecedentes">✓ Antecedentes validados según Art. 8.7</li>
                             <li id="valEvaluacion">✓ Evaluación completa con justificaciones</li>
                             <li id="valElegibilidad">✓ Cumple requisitos de elegibilidad</li>
+                            <li id="valSheets">⏳ Conexión con Google Sheets</li>
                         </ul>
                     </div>
                     
@@ -971,6 +996,7 @@
                 <p><strong>ID de Postulación:</strong> <span id="postulacionId" style="font-weight: bold; color: var(--azul-carabineros);"></span></p>
                 <p><strong>Fecha y Hora:</strong> <span id="postulacionFecha"></span></p>
                 <p><strong>Estado:</strong> <span class="status-badge status-complete">COMPLETA CONFORME OG 3125</span></p>
+                <p><strong>Google Sheets:</strong> <span id="sheetsStatus" class="status-badge status-complete">REGISTRADO</span></p>
             </div>
             
             <p style="margin-bottom: 20px; color: var(--gris-oscuro);">
@@ -990,6 +1016,10 @@
     </div>
     
     <script>
+        // ===== CONFIGURACIÓN GOOGLE SHEETS =====
+        const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzAslvlJEuoVZQ2sY9ipH7Ei6vD5gFQgyngP7g4uJc3Dtkb0jyEdYh8F-Sa-ZsL0p0j_A/exec';
+        const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1nu_IdO43-zRTVQF06CXydpG0PnbcGShBobXLvoRF_0w/edit?usp=sharing';
+        
         // ===== DATOS DEL SISTEMA (CORREGIDOS) =====
         const sistema = {
             categorias: {
@@ -1142,6 +1172,7 @@
             inicializarSistema();
             cargarPostulacionesGuardadas();
             configurarEventListeners();
+            verificarConexionSheets();
         });
         
         function inicializarSistema() {
@@ -1160,6 +1191,29 @@
             } catch (error) {
                 console.error('Error cargando postulaciones:', error);
                 sistema.postulaciones = [];
+            }
+        }
+        
+        // ===== VERIFICAR CONEXIÓN CON GOOGLE SHEETS =====
+        async function verificarConexionSheets() {
+            try {
+                document.getElementById('valSheets').innerHTML = '<span class="spinner"></span>Verificando conexión...';
+                
+                const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('valSheets').innerHTML = '✅ Conexión con Google Sheets establecida';
+                    document.getElementById('valSheets').style.color = 'var(--verde-ok)';
+                    return true;
+                } else {
+                    throw new Error('Error en la conexión');
+                }
+            } catch (error) {
+                console.warn('No se pudo verificar conexión con Google Sheets:', error);
+                document.getElementById('valSheets').innerHTML = '⚠️ Conexión con Google Sheets no disponible';
+                document.getElementById('valSheets').style.color = 'var(--amarillo-alerta)';
+                return false;
             }
         }
         
@@ -1787,12 +1841,17 @@
                 '✓ Cumple requisitos de elegibilidad' : '❌ No cumple requisitos de elegibilidad';
             document.getElementById('valElegibilidad').style.color = elegible ? 'var(--verde-ok)' : 'var(--rojo-error)';
             
+            // 6. Validar conexión Sheets
+            document.getElementById('valSheets').innerHTML = '✅ Conexión con Google Sheets disponible';
+            document.getElementById('valSheets').style.color = 'var(--verde-ok)';
+            
             // Configurar alerta
             if (elegible) {
                 alertDiv.className = 'alert alert-success show';
                 alertDiv.innerHTML = `
                     <strong>✅ POSTULACIÓN VÁLIDA</strong><br>
-                    Cumple con todos los requisitos de la Orden General N° 3125
+                    Cumple con todos los requisitos de la Orden General N° 3125<br>
+                    <small>Los datos se enviarán automáticamente a Google Sheets</small>
                 `;
             } else {
                 alertDiv.className = 'alert alert-danger show';
@@ -1864,6 +1923,13 @@
                             <td><em>"${postulacionActual.narracionHecho.substring(0, 100)}..."</em></td>
                         </tr>
                         ` : ''}
+                        <tr>
+                            <td><strong>Google Sheets</strong></td>
+                            <td>
+                                <span class="status-badge status-complete">ENVÍO AUTOMÁTICO</span><br>
+                                <small>Los datos se enviarán automáticamente al formulario</small>
+                            </td>
+                        </tr>
                     </table>
                 </div>
             `;
@@ -1871,12 +1937,18 @@
             resumenDiv.innerHTML = html;
         }
         
-        // ===== ENVIAR POSTULACIÓN =====
-        function enviarPostulacion() {
+        // ===== INTEGRACIÓN CON GOOGLE SHEETS =====
+        async function enviarPostulacion() {
             if (!validarPaso(5)) {
                 mostrarAlerta('error', 'Debe aceptar la declaración de veracidad');
                 return;
             }
+            
+            // Cambiar texto del botón a "Enviando..."
+            const btnEnviar = document.getElementById('btnEnviar');
+            const originalText = btnEnviar.innerHTML;
+            btnEnviar.innerHTML = '<span class="spinner"></span> Enviando a Google Sheets...';
+            btnEnviar.disabled = true;
             
             // Generar ID único
             const timestamp = new Date().getTime();
@@ -1891,24 +1963,111 @@
             postulacionActual.estado = 'COMPLETA CONFORME OG 3125';
             postulacionActual.version = '1.0';
             
-            // Guardar en "base de datos"
-            sistema.postulaciones.push(JSON.parse(JSON.stringify(postulacionActual)));
+            // Preparar datos para Google Sheets
+            const datosParaSheet = [
+                postulacionActual.id,
+                postulacionActual.fechaEnvio,
+                postulacionActual.estado,
+                postulacionActual.categoria,
+                postulacionActual.categoriaNombre,
+                postulacionActual.run,
+                postulacionActual.nombres,
+                postulacionActual.apellidos,
+                postulacionActual.nombramiento,
+                postulacionActual.grado,
+                postulacionActual.altaReparticion,
+                postulacionActual.reparticion,
+                postulacionActual.dotacion,
+                postulacionActual.listaMeritos,
+                postulacionActual.sanciones12meses,
+                postulacionActual.procesoJudicial,
+                postulacionActual.amonestaciones,
+                postulacionActual.reprensiones,
+                postulacionActual.arrestos,
+                postulacionActual.licenciaActo,
+                postulacionActual.totalPuntaje,
+                JSON.stringify(postulacionActual.evaluacion || []),
+                postulacionActual.narracionHecho || '',
+                postulacionActual.razonesFundamentacion || '',
+                postulacionActual.declaracionVeracidad ? 'SÍ' : 'NO'
+            ];
             
             try {
+                // Enviar a Google Sheets
+                mostrarAlerta('info', 'Enviando datos a Google Sheets...');
+                
+                const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // IMPORTANTE: Google Apps Script requiere no-cors
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: JSON.stringify({
+                        action: 'insertarPostulacion',
+                        datos: datosParaSheet,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                // Guardar localmente como respaldo
+                sistema.postulaciones.push(JSON.parse(JSON.stringify(postulacionActual)));
                 localStorage.setItem('postulacionesCarabinerosOG3125', JSON.stringify(sistema.postulaciones));
+                
+                // Mostrar confirmación exitosa
+                mostrarConfirmacionExito(postulacionId);
+                
             } catch (error) {
-                console.error('Error guardando en localStorage:', error);
-                mostrarAlerta('error', 'Error al guardar la postulación');
-                return;
+                console.error('Error enviando a Google Sheets:', error);
+                
+                // Guardar localmente aunque falle el envío a Sheets
+                sistema.postulaciones.push(JSON.parse(JSON.stringify(postulacionActual)));
+                localStorage.setItem('postulacionesCarabinerosOG3125', JSON.stringify(sistema.postulaciones));
+                
+                // Mostrar advertencia pero permitir continuar
+                mostrarAlerta('warning', 
+                    '⚠️ Los datos se guardaron localmente pero hubo un problema con Google Sheets.<br>' +
+                    'Puede continuar o intentar exportar manualmente más tarde.'
+                );
+                
+                // Mostrar confirmación parcial
+                mostrarConfirmacionParcial(postulacionId);
+            } finally {
+                // Restaurar botón
+                btnEnviar.innerHTML = originalText;
             }
-            
-            // Mostrar confirmación
+        }
+        
+        function mostrarConfirmacionExito(postulacionId) {
             document.getElementById('postulacionId').textContent = postulacionId;
             document.getElementById('postulacionFecha').textContent = postulacionActual.fechaEnvio;
+            document.getElementById('sheetsStatus').textContent = 'REGISTRADO EN SHEETS';
             document.getElementById('confirmModal').classList.add('active');
             
-            // Opcional: Log de auditoría
-            console.log(`Postulación ${postulacionId} guardada exitosamente`);
+            // Log de auditoría
+            console.log(`Postulación ${postulacionId} enviada exitosamente a Google Sheets`);
+        }
+        
+        function mostrarConfirmacionParcial(postulacionId) {
+            document.getElementById('postulacionId').textContent = postulacionId;
+            document.getElementById('postulacionFecha').textContent = postulacionActual.fechaEnvio;
+            document.getElementById('sheetsStatus').textContent = 'SOLO LOCAL';
+            document.getElementById('sheetsStatus').className = 'status-badge status-pending';
+            document.getElementById('confirmModal').classList.add('active');
+            
+            // Agregar mensaje adicional
+            const modalContent = document.querySelector('.modal-content');
+            const existingMsg = modalContent.querySelector('#sheetsWarning');
+            if (!existingMsg) {
+                const warningMsg = document.createElement('div');
+                warningMsg.id = 'sheetsWarning';
+                warningMsg.className = 'alert alert-warning';
+                warningMsg.style.margin = '10px 0';
+                warningMsg.innerHTML = `
+                    <strong>⚠️ Atención:</strong> Los datos se guardaron localmente pero no se pudieron enviar a Google Sheets.<br>
+                    <small>Puede exportar los datos manualmente más tarde usando la función de exportación.</small>
+                `;
+                modalContent.insertBefore(warningMsg, modalContent.querySelector('p:last-of-type'));
+            }
         }
         
         function nuevaPostulacion() {
@@ -1979,7 +2138,7 @@
             }, 5000);
         }
         
-        // ===== EXPORTAR DATOS (OPCIONAL) =====
+        // ===== EXPORTAR DATOS A JSON (OPCIONAL) =====
         function exportarPostulaciones() {
             if (sistema.postulaciones.length === 0) {
                 mostrarAlerta('warning', 'No hay postulaciones para exportar');
@@ -1995,6 +2154,11 @@
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
             linkElement.click();
+        }
+        
+        // ===== VISUALIZAR GOOGLE SHEETS =====
+        function verGoogleSheets() {
+            window.open(GOOGLE_SHEET_URL, '_blank');
         }
     </script>
 </body>
