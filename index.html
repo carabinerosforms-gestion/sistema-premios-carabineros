@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Postulación a Premios - Carabineros de Chile</title>
+    <style>
+        /* ===== PALETA OFICIAL CARABINEROS DE CHILE ===== */
+        :root {
+            --azul-carabineros: #0033a0;       /* Azul oficial */
+            --rojo-carabineros: #d52b1e;       /* Rojo oficial */
+            --dorado-carabineros: #c9a35c;     /* Dorado de insignias */
+            --gris-oscuro: #2c3e50;            /* Uniforme de gala */
+            --gris-medio: #5d6d7e;             /* Uniforme diario */
+            --blanco: #ffffff;
+            --gris-claro: #f8f9fa;
+            --verde-ok: #27ae60;
+            --rojo-error: #e74c3c;
+            --amarillo-alerta: #f39c12;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--gris-oscuro);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--blanco);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 51, 160, 0.15);
+            overflow: hidden;
+            border: 1px solid rgba(0, 51, 160, 0.1);
+        }
+        
+        /* ===== HEADER CON COLORES INSTITUCIONALES ===== */
+        header {
+            background: linear-gradient(135deg, var(--azul-carabineros) 0%, #0048d0 100%);
+            color: var(--blanco);
+            padding: 25px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent 0%, var(--rojo-carabineros) 100%);
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        }
+        
+        .logo-institucional {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .escudo-container {
+            width: 70px;
+            height: 70px;
+            background: var(--blanco);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--dorado-carabineros);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .escudo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--azul-carabineros);
+            background: linear-gradient(45deg, var(--azul-carabineros), var(--rojo-carabineros));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .titulo-principal h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .titulo-principal .subtitulo {
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        
+        /* ===== BARRA DE PROGRESO MEJORADA ===== */
+        .progress-bar {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 15px 5px;
+            position: relative;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+            cursor: default;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .step:last-child {
+            border-right: none;
+        }
+        
+        .step.active {
+            color: var(--blanco);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .step.active .step-number {
+            background: var(--dorado-carabineros);
+            color: var(--azul-carabineros);
+            border-color: var(--blanco);
+        }
+        
+        .step.completed {
+            color: var(--blanco);
+        }
+        
+        .step.completed .step-number {
+            background: var(--verde-ok);
+            color: var(--blanco);
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--blanco);
+            margin-right: 8px;
+            border: 2px solid transparent;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        /* ===== CONTENIDO PRINCIPAL ===== */
+        .main-content {
+            padding: 30px;
+            min-height: 500px;
+        }
+        
+        .step-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== SECCIONES DE FORMULARIO ===== */
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: var(--gris-claro);
+            border-radius: 10px;
+            border-left: 5px solid var(--azul-carabineros);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-section h3 {
+            color: var(--azul-carabineros);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(0, 51, 160, 0.1);
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-section h3::before {
+            content: '📋';
+            font-size: 1.2rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--gris-oscuro);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .form-group label .required {
+            color: var(--rojo-carabineros);
+            margin-left: 3px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: var(--blanco);
+        }
+        
+        .form-control:focus {
+            border-color: var(--azul-carabineros);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 51, 160, 0.1);
+        }
+        
+        .form-control.error {
+            border-color: var(--rojo-error);
+            background: #fff5f5;
+        }
+        
+        .form-control.success {
+            border-color: var(--verde-ok);
+        }
+        
+        .error-message {
+            color: var(--rojo-error);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .error-message.show {
+            display: block;
+            animation: shake 0.3s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        /* ===== BOTONES CON COLORES INSTITUCIONALES ===== */
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(0, 51, 160, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 35px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 150px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azul-carabineros) 0%, #0048d0 100%);
+            color: var(--blanco);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0048d0 0%, #0033a0 100%);
+        }
+        
+        .btn-secondary {
+            background: var(--gris-medio);
+            color: var(--blanco);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--verde-ok) 0%, #219653 100%);
+            color: var(--blanco);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--rojo-error) 0%, #c0392b 100%);
+            color: var(--blanco);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* ===== REQUISITOS Y VALIDACIONES ===== */
+        .requisitos-box {
+            background: linear-gradient(135deg, #e8f4ff 0%, #d4e7ff 100%);
+            border: 2px solid var(--azul-carabineros);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .requisitos-box h4 {
+            color: var(--azul-carabineros);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .requisitos-box h4::before {
+            content: '✅';
+        }
+        
+        .requisitos-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .requisitos-box li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+            color: var(--gris-oscuro);
+        }
+        
+        .requisitos-box li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--verde-ok);
+            font-weight: bold;
+        }
+        
+        /* ===== TABLAS Y RESUMEN ===== */
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--blanco);
+        }
+        
+        th {
+            background: linear-gradient(135deg, var(--azul-carabineros) 0%, #0048d0 100%);
+            color: var(--blanco);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 3px solid var(--dorado-carabineros);
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            color: var(--gris-oscuro);
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* ===== BADGES DE ESTADO ===== */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-complete {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* ===== MODAL DE CONFIRMACIÓN ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--blanco);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-top: 5px solid var(--azul-carabineros);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(0, 51, 160, 0.1);
+        }
+        
+        .modal-header h3 {
+            color: var(--azul-carabineros);
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--gris-medio);
+            line-height: 1;
+        }
+        
+        /* ===== ALERTAS Y NOTIFICACIONES ===== */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .form-help {
+            font-size: 0.85rem;
+            color: var(--gris-medio);
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .progress-bar {
+                flex-direction: column;
+            }
+            
+            .step {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .step:last-child {
+                border-bottom: none;
+            }
+            
+            header {
+                padding: 20px;
+            }
+            
+            .titulo-principal h1 {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* ===== ANIMACIONES ADICIONALES ===== */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 51, 160, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 51, 160, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 51, 160, 0); }
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER CON COLORES OFICIALES -->
+        <header>
+            <div class="logo-institucional">
+                <div class="escudo-container">
+                    <div class="escudo">C</div>
+                </div>
+                <div class="titulo-principal">
+                    <h1>SISTEMA DE POSTULACIÓN A PREMIOS</h1>
+                    <div class="subtitulo">Carabineros de Chile - Orden General N° 3125/2024</div>
+                </div>
+            </div>
+            
+            <!-- BARRA DE PROGRESO MEJORADA -->
+            <div class="progress-bar">
+                <div class="step" id="step1">
+                    <span class="step-number">1</span> Categoría
+                </div>
+                <div class="step" id="step2">
+                    <span class="step-number">2</span> Datos
+                </div>
+                <div class="step" id="step3">
+                    <span class="step-number">3</span> Antecedentes
+                </div>
+                <div class="step" id="step4">
+                    <span class="step-number">4</span> Evaluación
+                </div>
+                <div class="step" id="step5">
+                    <span class="step-number">5</span> Revisión
+                </div>
+            </div>
+        </header>
+        
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="main-content">
+            <!-- ALERTA GLOBAL -->
+            <div class="alert" id="globalAlert"></div>
+            
+            <!-- PASO 1: SELECCIÓN DE CATEGORÍA -->
+            <div class="step-content active" id="stepContent1">
+                <div class="form-section">
+                    <h3>Selección de Categoría de Premio</h3>
+                    <p>Seleccione la categoría para la cual postula el funcionario, conforme al Manual OG 3125:</p>
+                    
+                    <div class="form-group">
+                        <label>Categoría de Premio <span class="required">*</span></label>
+                        <select id="categoriaPremio" class="form-control">
+                            <option value="">-- Seleccione categoría --</option>
+                            <option value="d1">d.1 - Desempeño Profesional Operativo</option>
+                            <option value="d2">d.2 - Servicios Destacados a la Comunidad</option>
+                            <option value="d3">d.3 - Acción Policial Destacada</option>
+                            <option value="d4">d.4 - Acciones Destacadas en DD.HH.</option>
+                            <option value="f1">f.1 - Desempeño Profesional Administrativo</option>
+                        </select>
+                        <div class="error-message" id="categoriaError">Debe seleccionar una categoría de premio</div>
+                        <div class="form-help">Consulte el Manual OG 3125 para verificar requisitos específicos</div>
+                    </div>
+                    
+                    <!-- REQUISITOS ESPECÍFICOS DE LA CATEGORÍA -->
+                    <div id="requisitosCategoria" class="requisitos-box hidden">
+                        <h4>Requisitos específicos de la categoría seleccionada:</h4>
+                        <ul id="listaRequisitos"></ul>
+                    </div>
+                </div>
+                
+                <!-- BOTONES DE NAVEGACIÓN -->
+                <div class="btn-group">
+                    <button class="btn btn-secondary" disabled onclick="prevStep(0)">
+                        ← Anterior
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep(2)" id="btnNextStep1">
+                        Siguiente →
+                    </button>
+                </div>
+            </div>
+            
+            <!-- PASO 2: DATOS PERSONALES -->
+            <div class="step-content" id="stepContent2">
+                <div class="form-section">
+                    <h3>Datos del Funcionario</h3>
+                    <div class="form-grid">
+                        <!-- RUN -->
+                        <div class="form-group">
+                            <label>RUN <span class="required">*</span></label>
+                            <input type="text" id="run" class="form-control" placeholder="12.345.678-9" 
+                                   onblur="validarRUNCampo()">
+                            <div class="error-message" id="runError">RUN inválido. Formato: 12.345.678-9</div>
+                        </div>
+                        
+                        <!-- NOMBRES -->
+                        <div class="form-group">
+                            <label>Nombres <span class="required">*</span></label>
+                            <input type="text" id="nombres" class="form-control" placeholder="JUAN CARLOS">
+                            <div class="error-message" id="nombresError">Debe ingresar los nombres</div>
+                        </div>
+                        
+                        <!-- APELLIDOS -->
+                        <div class="form-group">
+                            <label>Apellidos <span class="required">*</span></label>
+                            <input type="text" id="apellidos" class="form-control" placeholder="PÉREZ GONZÁLEZ">
+                            <div class="error-message" id="apellidosError">Debe ingresar los apellidos</div>
+                        </div>
+                        
+                        <!-- NOMBRAMIENTO -->
+                        <div class="form-group">
+                            <label>Nombramiento <span class="required">*</span></label>
+                            <select id="nombramiento" class="form-control">
+                                <option value="">-- Seleccione --</option>
+                                <option value="PNS">P.N.S. (Personal de Nombramiento Supremo)</option>
+                                <option value="PNI">P.N.I. (Personal de Nombramiento Institucional)</option>
+                                <option value="CPR">C.P.R. (Contratado por Resolución)</option>
+                            </select>
+                            <div class="error-message" id="nombramientoError">Seleccione el tipo de nombramiento</div>
+                        </div>
+                        
+                        <!-- GRADO -->
+                        <div class="form-group">
+                            <label>Grado <span class="required">*</span></label>
+                            <select id="grado" class="form-control" disabled>
+                                <option value="">-- Seleccione nombramiento primero --</option>
+                            </select>
+                            <div class="error-message" id="gradoError">Seleccione el grado correspondiente</div>
+                        </div>
+                        
+                        <!-- ALTA REPARTICIÓN -->
+                        <div class="form-group">
+                            <label>Alta Repartición <span class="required">*</span></label>
+                            <input type="text" id="altaReparticion" class="form-control" 
+                                   placeholder="Ej: Zona Metropolitana">
+                            <div class="error-message" id="altaRepError">Debe ingresar la Alta Repartición</div>
+                        </div>
+                        
+                        <!-- REPARTICIÓN -->
+                        <div class="form-group">
+                            <label>Repartición <span class="required">*</span></label>
+                            <input type="text" id="reparticion" class="form-control" 
+                                   placeholder="Ej: Prefectura Norte">
+                            <div class="error-message" id="reparticionError">Debe ingresar la Repartición</div>
+                        </div>
+                        
+                        <!-- DOTACIÓN -->
+                        <div class="form-group">
+                            <label>Dotación <span class="required">*</span></label>
+                            <input type="text" id="dotacion" class="form-control" 
+                                   placeholder="Ej: 6ª Comisaría 'Recoleta'">
+                            <div class="error-message" id="dotacionError">Debe ingresar la Dotación</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- BOTONES DE NAVEGACIÓN -->
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="prevStep(1)">
+                        ← Anterior
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep(3)" id="btnNextStep2">
+                        Siguiente →
+                    </button>
+                </div>
+            </div>
+            
+            <!-- PASO 3: ANTECEDENTES ADMINISTRATIVOS -->
+            <div class="step-content" id="stepContent3">
+                <div class="form-section">
+                    <h3>Antecedentes Administrativos y Disciplinarios</h3>
+                    <p>Complete la información según los registros institucionales (Artículo 8.7 OG 3125)</p>
+                    
+                    <div class="form-grid">
+                        <!-- LISTA DE MÉRITOS -->
+                        <div class="form-group">
+                            <label>¿En Lista N°1 de Méritos o N°2 Satisfactorios? <span class="required">*</span></label>
+                            <select id="listaMeritos" class="form-control">
+                                <option value="">-- Seleccione --</option>
+                                <option value="lista1">Lista N°1 - Méritos</option>
+                                <option value="lista2">Lista N°2 - Satisfactorios</option>
+                                <option value="ninguna">No está en ninguna lista</option>
+                            </select>
+                            <div class="error-message" id="listaError">Selección requerida según OG 3125</div>
+                        </div>
+                        
+                        <!-- SANCIONES ÚLTIMOS 12 MESES -->
+                        <div class="form-group">
+                            <label>¿Tiene sanciones (días de arresto) últimos 12 meses? <span class="required">*</span></label>
+                            <select id="sanciones12meses" class="form-control" onchange="validarElegibilidad()">
+                                <option value="">-- Seleccione --</option>
+                                <option value="no">No</option>
+                                <option value="si">Sí</option>
+                            </select>
+                            <div class="error-message" id="sancionesError">Selección requerida</div>
+                        </div>
+                        
+                        <!-- PROCESO JUDICIAL -->
+                        <div class="form-group">
+                            <label>¿Sometido a proceso judicial? <span class="required">*</span></label>
+                            <select id="procesoJudicial" class="form-control" onchange="validarElegibilidad()">
+                                <option value="">-- Seleccione --</option>
+                                <option value="no">No</option>
+                                <option value="si_imputado">Sí - Formalizado/Imputado</option>
+                                <option value="si_victima">Sí - En calidad de víctima/testigo</option>
+                            </select>
+                            <div class="error-message" id="procesoError">Selección requerida</div>
+                        </div>
+                    </div>
+                    
+                    <!-- HISTORIAL DISCIPLINARIO -->
+                    <h4 style="margin: 30px 0 15px 0; color: var(--azul-carabineros); padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                        Historial Disciplinario (trayectoria)
+                    </h4>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Amonestaciones</label>
+                            <input type="number" id="amonestaciones" class="form-control" min="0" value="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Reprensiones</label>
+                            <input type="number" id="reprensiones" class="form-control" min="0" value="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Arrestos</label>
+                            <input type="number" id="arrestos" class="form-control" min="0" value="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Días licencia acto del servicio</label>
+                            <input type="number" id="licenciaActo" class="form-control" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- BOTONES DE NAVEGACIÓN -->
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="prevStep(2)">
+                        ← Anterior
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep(4)" id="btnNextStep3">
+                        Siguiente →
+                    </button>
+                </div>
+            </div>
+            
+            <!-- PASO 4: EVALUACIÓN -->
+            <div class="step-content" id="stepContent4">
+                <div class="form-section">
+                    <h3>Evaluación de Factores - <span id="categoriaTitulo"></span></h3>
+                    <p>Califique cada factor según la escala establecida en el Manual OG 3125:</p>
+                    
+                    <div class="requisitos-box">
+                        <h4>Escala de evaluación:</h4>
+                        <ul>
+                            <li><strong>3 - Excelente:</strong> Desempeño óptimo, exento de faltas importantes</li>
+                            <li><strong>2 - Muy Bueno:</strong> Desempeño por sobre lo esperado</li>
+                            <li><strong>1 - Bueno:</strong> Desempeño con aportes esperados</li>
+                        </ul>
+                        <p style="margin-top: 10px; color: var(--rojo-carabineros); font-weight: bold;">
+                            * Puntaje 3 requiere justificación obligatoria
+                        </p>
+                    </div>
+                    
+                    <!-- FACTORES DINÁMICOS -->
+                    <div id="factoresEvaluacion"></div>
+                    
+                    <!-- SECCIÓN ESPECIAL PARA ACCIÓN POLICIAL -->
+                    <div id="seccionAccionPolicial" class="hidden">
+                        <div class="form-group">
+                            <label>Narración del hecho destacado <span class="required">*</span></label>
+                            <textarea id="narracionHecho" class="form-control" rows="4" 
+                                      placeholder="Describa brevemente la acción policial destacada, indicando fecha, lugar, circunstancias y participantes..."></textarea>
+                            <div class="error-message" id="narracionError">Debe describir la acción policial destacada</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Razones que fundamentan la proposición <span class="required">*</span></label>
+                            <textarea id="razonesFundamentacion" class="form-control" rows="4" 
+                                      placeholder="Explique las razones para proponer esta acción, considerando impacto, riesgo asumido, resultados obtenidos..."></textarea>
+                            <div class="error-message" id="razonesError">Debe proporcionar las razones de fundamentación</div>
+                        </div>
+                    </div>
+                    
+                    <!-- TOTAL PUNTAJE -->
+                    <div class="form-group" style="margin-top: 30px;">
+                        <label>Total Puntaje Obtenido:</label>
+                        <input type="text" id="totalPuntaje" class="form-control" style="font-size: 1.2rem; font-weight: bold; text-align: center;" 
+                               readonly value="0">
+                        <div class="form-help">Suma de todos los factores evaluados</div>
+                    </div>
+                </div>
+                
+                <!-- BOTONES DE NAVEGACIÓN -->
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="prevStep(3)">
+                        ← Anterior
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep(5)" id="btnNextStep4">
+                        Siguiente →
+                    </button>
+                </div>
+            </div>
+            
+            <!-- PASO 5: REVISIÓN FINAL -->
+            <div class="step-content" id="stepContent5">
+                <div class="form-section">
+                    <h3>Revisión Final de la Postulación</h3>
+                    
+                    <!-- ALERTA DE VALIDACIÓN -->
+                    <div class="alert" id="revisionAlert"></div>
+                    
+                    <!-- RESUMEN DE POSTULACIÓN -->
+                    <div id="resumenPostulacion"></div>
+                    
+                    <!-- VALIDACIÓN OG 3125 -->
+                    <div class="requisitos-box">
+                        <h4>Validación conforme a Orden General N° 3125</h4>
+                        <ul id="validacionLista">
+                            <li id="valCategoria">✓ Categoría seleccionada correctamente</li>
+                            <li id="valDatos">✓ Datos personales completos y válidos</li>
+                            <li id="valAntecedentes">✓ Antecedentes validados según Art. 8.7</li>
+                            <li id="valEvaluacion">✓ Evaluación completa con justificaciones</li>
+                            <li id="valElegibilidad">✓ Cumple requisitos de elegibilidad</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- FIRMA DEL PROPONENTE -->
+                    <div style="margin-top: 30px; padding: 20px; border: 2px dashed #ddd; border-radius: 8px;">
+                        <h4 style="color: var(--azul-carabineros); margin-bottom: 15px;">Declaración del Proponente</h4>
+                        <p style="margin-bottom: 15px; color: var(--gris-oscuro);">
+                            <input type="checkbox" id="declaracionVeracidad" style="margin-right: 10px;">
+                            <label for="declaracionVeracidad" style="font-weight: 600;">
+                                Declaro bajo juramento que la información proporcionada en esta postulación es veraz, 
+                                completa y ajustada a los requisitos establecidos en la Orden General N° 3125 de Carabineros de Chile.
+                            </label>
+                        </p>
+                        <div class="error-message" id="declaracionError" style="margin-top: 10px;">
+                            Debe aceptar la declaración de veracidad
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- BOTONES FINALES -->
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="prevStep(4)">
+                        ← Anterior
+                    </button>
+                    <button class="btn btn-success" onclick="enviarPostulacion()" id="btnEnviar" disabled>
+                        ✅ Enviar Postulación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✅ Postulación Enviada Exitosamente</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <div style="font-size: 4rem; color: var(--verde-ok); margin-bottom: 10px;">✓</div>
+                <h4 style="color: var(--azul-carabineros); margin-bottom: 15px;">Postulación Registrada</h4>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <p><strong>ID de Postulación:</strong> <span id="postulacionId" style="font-weight: bold; color: var(--azul-carabineros);"></span></p>
+                <p><strong>Fecha y Hora:</strong> <span id="postulacionFecha"></span></p>
+                <p><strong>Estado:</strong> <span class="status-badge status-complete">COMPLETA CONFORME OG 3125</span></p>
+            </div>
+            
+            <p style="margin-bottom: 20px; color: var(--gris-oscuro);">
+                La postulación ha sido registrada en el sistema y se encuentra disponible para revisión 
+                por la autoridad competente según el proceso establecido en la Orden General N° 3125.
+            </p>
+            
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px;">
+                <button class="btn btn-primary" onclick="nuevaPostulacion()">
+                    📝 Nueva Postulación
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ===== DATOS DEL SISTEMA (CORREGIDOS) =====
+        const sistema = {
+            categorias: {
+                d1: {
+                    nombre: "Desempeño Profesional Operativo",
+                    requisitos: [
+                        "Personal de Nombramiento Supremo (Subteniente a Teniente Coronel)",
+                        "Personal de Nombramiento Institucional (Carabinero a Suboficial Mayor)",
+                        "Lista N°1 de Méritos o N°2 Satisfactorios",
+                        "Sin sanciones últimos 12 meses (días de arresto)",
+                        "Sin procesos judiciales como imputado"
+                    ],
+                    factores: [
+                        "Eficacia: Realiza trabajos según objetivos y metas asignadas",
+                        "Eficiencia: Administra recursos con máximo rendimiento",
+                        "Calidad de trabajo: Cumple labor sin errores importantes",
+                        "Capacidad de Gestión: Anticipa necesidades y genera acciones proactivas",
+                        "Servicios a la comunidad: Interactúa permanentemente con ciudadanía",
+                        "Motivación laboral: Buena disposición en cumplimiento de obligaciones",
+                        "Iniciativa: Propone soluciones sin necesidad de supervisión",
+                        "Relaciones interpersonales: Trato amable y respetuoso",
+                        "Discreción: Reserva en manejo de información institucional",
+                        "Principios y Valores: Comportamiento ético acorde a la Institución"
+                    ],
+                    puntajeMinimo: 10
+                },
+                d2: {
+                    nombre: "Servicios Destacados a la Comunidad",
+                    requisitos: [
+                        "Personal de Nombramiento Supremo o Institucional",
+                        "Desempeño óptimo en acercamiento a la comunidad",
+                        "Lista N°1 de Méritos o N°2 Satisfactorios",
+                        "Sin procesos judiciales como imputado",
+                        "Aprobación del Jefe de Zona o Prefecto"
+                    ],
+                    factores: [
+                        "Desempeño Comunitario: Detecta necesidades ciudadanas",
+                        "Capacidad para solucionar problemas",
+                        "Integración Social: Mantiene canales de comunicación",
+                        "Calidad de Servicio: Cumple con orientación de compromiso comunitario",
+                        "Aporte a la efectividad Institucional",
+                        "Liderazgo social: Motiva a la comunidad",
+                        "Interés por el trabajo hacia la comunidad",
+                        "Relaciones interpersonales respetuosas",
+                        "Iniciativa en soluciones comunitarias",
+                        "Principios y Valores institucionales"
+                    ],
+                    puntajeMinimo: 10
+                },
+                d3: {
+                    nombre: "Acción Policial Destacada",
+                    requisitos: [
+                        "Hecho de importancia, gravedad o trascendencia",
+                        "Impacto positivo en la comunidad",
+                        "Personal puso en riesgo su integridad física",
+                        "Evitó que personal o civiles resultaran afectados",
+                        "Acción prestigia a Carabineros de Chile",
+                        "Excede exigencias normales del servicio"
+                    ],
+                    factores: [
+                        "Importancia y trascendencia del hecho",
+                        "Impacto en la comunidad",
+                        "Participación activa del personal",
+                        "Nivel de riesgo para la integridad física",
+                        "Protección a personal institucional y civiles",
+                        "Prestigio institucional generado",
+                        "Exceder exigencias del servicio",
+                        "Grado de compromiso demostrado",
+                        "Reconocimiento requerido",
+                        "Características distintivas sobre lo exigido"
+                    ],
+                    puntajeMinimo: 8
+                },
+                d4: {
+                    nombre: "Acciones Destacadas en Promoción de DD.HH.",
+                    requisitos: [
+                        "Personal que propone iniciativas para garantizar DD.HH.",
+                        "Evidencia compromiso institucional con estándares nacionales e internacionales",
+                        "Lista N°1 de Méritos o N°2 Satisfactorios",
+                        "Sin sanciones graves",
+                        "Aprobación de la Sección de DD.HH."
+                    ],
+                    factores: [
+                        "Eficacia en procedimientos de DD.HH.",
+                        "Eficiencia en uso de recursos para DD.HH.",
+                        "Contribución a protección de DD.HH.",
+                        "Promoción activa de DD.HH.",
+                        "Iniciativa en ejecución de acciones",
+                        "Relaciones interpersonales empáticas",
+                        "Discreción en manejo de información",
+                        "Principios y Valores institucionales",
+                        "Enfoque en grupos vulnerables",
+                        "Difusión de información apropiada"
+                    ],
+                    puntajeMinimo: 10
+                },
+                f1: {
+                    nombre: "Desempeño Profesional Administrativo",
+                    requisitos: [
+                        "Personal de Nombramiento Supremo de Intendencia/Servicios",
+                        "Personal Civil de Nombramiento Supremo/Institucional",
+                        "Personal Contratado por Resolución (C.P.R.)",
+                        "Lista N°1 de Méritos o N°2 Satisfactorios",
+                        "Sin sanciones administrativas graves"
+                    ],
+                    factores: [
+                        "Eficacia de la labor administrativa",
+                        "Eficiencia en uso de recursos",
+                        "Calidad del trabajo sin errores importantes",
+                        "Capacidad de gestión según planificación",
+                        "Motivación laboral",
+                        "Iniciativa en propuesta de soluciones",
+                        "Relaciones interpersonales adecuadas",
+                        "Discreción en manejo de información",
+                        "Principios y Valores institucionales",
+                        "Presentación y orden del trabajo"
+                    ],
+                    puntajeMinimo: 10
+                }
+            },
+            
+            // ===== GRADOS CORREGIDOS SEGÚN MANUAL =====
+            gradosPorNombramiento: {
+                PNS: [
+                    "Subteniente", "Teniente", "Capitán", "Mayor", 
+                    "Teniente Coronel", "Coronel", "General de Brigada",
+                    "General de División", "General Director"
+                ],
+                PNI: [
+                    "Carabinero", "Cabo 2°", "Cabo 1°", "Sargento 2°", 
+                    "Sargento 1°", "Suboficial", "Suboficial Mayor"
+                ],
+                CPR: [
+                    "Profesional", "Técnico Superior", "Técnico", 
+                    "Administrativo", "Especialista", "Analista"
+                ]
+            },
+            
+            postulaciones: []
+        };
+        
+        // ===== VARIABLES DE ESTADO =====
+        let currentStep = 1;
+        let postulacionActual = {
+            evaluacion: []
+        };
+        
+        // ===== INICIALIZACIÓN =====
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarSistema();
+            cargarPostulacionesGuardadas();
+            configurarEventListeners();
+        });
+        
+        function inicializarSistema() {
+            cargarGrados();
+            configurarCategoriaListener();
+            configurarNombramientoListener();
+        }
+        
+        function cargarPostulacionesGuardadas() {
+            try {
+                const guardadas = localStorage.getItem('postulacionesCarabinerosOG3125');
+                if (guardadas) {
+                    sistema.postulaciones = JSON.parse(guardadas);
+                    console.log(`Cargadas ${sistema.postulaciones.length} postulaciones previas`);
+                }
+            } catch (error) {
+                console.error('Error cargando postulaciones:', error);
+                sistema.postulaciones = [];
+            }
+        }
+        
+        // ===== CONFIGURACIÓN DE EVENT LISTENERS =====
+        function configurarEventListeners() {
+            // Evento para mostrar requisitos al seleccionar categoría
+            document.getElementById('categoriaPremio').addEventListener('change', function() {
+                mostrarRequisitosCategoria(this.value);
+            });
+            
+            // Evento para actualizar grados al cambiar nombramiento
+            document.getElementById('nombramiento').addEventListener('change', function() {
+                actualizarGradosPorNombramiento(this.value);
+            });
+            
+            // Evento para validar RUN en tiempo real
+            document.getElementById('run').addEventListener('blur', validarRUNCampo);
+        }
+        
+        function configurarCategoriaListener() {
+            const select = document.getElementById('categoriaPremio');
+            select.addEventListener('change', function() {
+                const categoria = this.value;
+                const requisitosDiv = document.getElementById('requisitosCategoria');
+                const lista = document.getElementById('listaRequisitos');
+                
+                if (categoria && sistema.categorias[categoria]) {
+                    requisitosDiv.classList.remove('hidden');
+                    lista.innerHTML = '';
+                    
+                    sistema.categorias[categoria].requisitos.forEach(req => {
+                        const li = document.createElement('li');
+                        li.textContent = req;
+                        lista.appendChild(li);
+                    });
+                } else {
+                    requisitosDiv.classList.add('hidden');
+                }
+            });
+        }
+        
+        function configurarNombramientoListener() {
+            document.getElementById('nombramiento').addEventListener('change', function() {
+                const nombramiento = this.value;
+                const selectGrado = document.getElementById('grado');
+                
+                selectGrado.disabled = !nombramiento;
+                
+                if (nombramiento) {
+                    const grados = sistema.gradosPorNombramiento[nombramiento] || [];
+                    selectGrado.innerHTML = '<option value="">-- Seleccione grado --</option>';
+                    
+                    grados.forEach(grado => {
+                        const option = document.createElement('option');
+                        option.value = grado;
+                        option.textContent = grado;
+                        selectGrado.appendChild(option);
+                    });
+                } else {
+                    selectGrado.innerHTML = '<option value="">-- Seleccione nombramiento primero --</option>';
+                }
+            });
+        }
+        
+        // ===== FUNCIONES DE CARGA =====
+        function cargarGrados() {
+            const select = document.getElementById('grado');
+            select.innerHTML = '<option value="">-- Seleccione nombramiento primero --</option>';
+        }
+        
+        function actualizarGradosPorNombramiento(nombramiento) {
+            const select = document.getElementById('grado');
+            select.disabled = !nombramiento;
+            
+            if (nombramiento) {
+                const grados = sistema.gradosPorNombramiento[nombramiento] || [];
+                select.innerHTML = '<option value="">-- Seleccione grado --</option>';
+                
+                grados.forEach(grado => {
+                    const option = document.createElement('option');
+                    option.value = grado;
+                    option.textContent = grado;
+                    select.appendChild(option);
+                });
+            }
+        }
+        
+        function mostrarRequisitosCategoria(categoria) {
+            const requisitosDiv = document.getElementById('requisitosCategoria');
+            const lista = document.getElementById('listaRequisitos');
+            
+            if (categoria && sistema.categorias[categoria]) {
+                requisitosDiv.classList.remove('hidden');
+                lista.innerHTML = '';
+                
+                sistema.categorias[categoria].requisitos.forEach(req => {
+                    const li = document.createElement('li');
+                    li.textContent = req;
+                    lista.appendChild(li);
+                });
+            } else {
+                requisitosDiv.classList.add('hidden');
+            }
+        }
+        
+        // ===== NAVEGACIÓN ENTRE PASOS (CORREGIDA) =====
+        function nextStep(step) {
+            if (!validarPaso(currentStep)) {
+                mostrarAlerta('error', 'Por favor complete todos los campos requeridos correctamente');
+                return;
+            }
+            
+            // Ocultar paso actual
+            document.getElementById(`stepContent${currentStep}`).classList.remove('active');
+            
+            // Marcar paso como completado
+            document.getElementById(`step${currentStep}`).classList.add('completed');
+            
+            // Actualizar estado
+            currentStep = step;
+            
+            // Mostrar nuevo paso
+            document.getElementById(`stepContent${currentStep}`).classList.add('active');
+            
+            // Actualizar progreso visual (CORRECCIÓN APLICADA)
+            actualizarProgreso();
+            
+            // Configuración específica por paso
+            switch(step) {
+                case 4:
+                    cargarFactoresEvaluacion();
+                    break;
+                case 5:
+                    generarResumen();
+                    break;
+            }
+        }
+        
+        function prevStep(step) {
+            // Ocultar paso actual
+            document.getElementById(`stepContent${currentStep}`).classList.remove('active');
+            
+            // Quitar estado completado del paso actual
+            document.getElementById(`step${currentStep}`).classList.remove('completed');
+            
+            // Actualizar estado
+            currentStep = step;
+            
+            // Mostrar paso anterior
+            document.getElementById(`stepContent${currentStep}`).classList.add('active');
+            
+            // Actualizar progreso visual
+            actualizarProgreso();
+        }
+        
+        // ===== FUNCIÓN DE PROGRESO CORREGIDA =====
+        function actualizarProgreso() {
+            document.querySelectorAll('.step').forEach((step, i) => {
+                const stepNumber = i + 1;
+                
+                // Solo el paso actual tiene clase 'active'
+                if (stepNumber === currentStep) {
+                    step.classList.add('active');
+                    step.classList.remove('completed');
+                } else if (stepNumber < currentStep) {
+                    step.classList.remove('active');
+                    step.classList.add('completed');
+                } else {
+                    step.classList.remove('active');
+                    step.classList.remove('completed');
+                }
+            });
+        }
+        
+        // ===== VALIDACIONES (CORREGIDAS) =====
+        function validarPaso(paso) {
+            let valido = true;
+            
+            switch(paso) {
+                case 1:
+                    valido = validarPaso1();
+                    break;
+                    
+                case 2:
+                    valido = validarPaso2();
+                    break;
+                    
+                case 3:
+                    valido = validarPaso3();
+                    break;
+                    
+                case 4:
+                    valido = validarPaso4();
+                    break;
+                    
+                case 5:
+                    valido = validarPaso5();
+                    break;
+            }
+            
+            return valido;
+        }
+        
+        function validarPaso1() {
+            const categoria = document.getElementById('categoriaPremio').value;
+            let valido = true;
+            
+            if (!categoria) {
+                mostrarError('categoriaError');
+                valido = false;
+            } else {
+                ocultarError('categoriaError');
+                postulacionActual.categoria = categoria;
+                postulacionActual.categoriaNombre = sistema.categorias[categoria].nombre;
+            }
+            
+            return valido;
+        }
+        
+        function validarPaso2() {
+            let valido = true;
+            
+            // Validar RUN (CORRECCIÓN APLICADA)
+            const run = document.getElementById('run').value;
+            if (!validarRUN(run)) {
+                mostrarError('runError');
+                valido = false;
+            } else {
+                ocultarError('runError');
+                postulacionActual.run = run;
+            }
+            
+            // Validar campos con mapeo CORREGIDO
+            const campos = [
+                { id: 'nombres', error: 'nombresError' },
+                { id: 'apellidos', error: 'apellidosError' },
+                { id: 'nombramiento', error: 'nombramientoError' },
+                { id: 'grado', error: 'gradoError' },
+                { id: 'altaReparticion', error: 'altaRepError' },
+                { id: 'reparticion', error: 'reparticionError' },
+                { id: 'dotacion', error: 'dotacionError' }
+            ];
+            
+            campos.forEach(campo => {
+                const el = document.getElementById(campo.id);
+                if (!el.value) {
+                    mostrarError(campo.error);
+                    valido = false;
+                } else {
+                    ocultarError(campo.error);
+                    postulacionActual[campo.id] = el.value;
+                }
+            });
+            
+            return valido;
+        }
+        
+        function validarPaso3() {
+            let valido = true;
+            
+            const campos = [
+                { id: 'listaMeritos', error: 'listaError' },
+                { id: 'sanciones12meses', error: 'sancionesError' },
+                { id: 'procesoJudicial', error: 'procesoError' }
+            ];
+            
+            campos.forEach(campo => {
+                const el = document.getElementById(campo.id);
+                if (!el.value) {
+                    mostrarError(campo.error);
+                    valido = false;
+                } else {
+                    ocultarError(campo.error);
+                    postulacionActual[campo.id] = el.value;
+                }
+            });
+            
+            // Validar elegibilidad (CORRECCIÓN APLICADA)
+            if (!validarElegibilidad()) {
+                valido = false;
+            }
+            
+            // Guardar otros antecedentes
+            postulacionActual.amonestaciones = document.getElementById('amonestaciones').value;
+            postulacionActual.reprensiones = document.getElementById('reprensiones').value;
+            postulacionActual.arrestos = document.getElementById('arrestos').value;
+            postulacionActual.licenciaActo = document.getElementById('licenciaActo').value;
+            
+            return valido;
+        }
+        
+        function validarPaso4() {
+            const categoriaActual = postulacionActual.categoria;
+            let valido = true;
+            let totalPuntaje = 0;
+            
+            // Limpiar evaluación previa
+            postulacionActual.evaluacion = [];
+            
+            // Validar factores
+            const factores = document.querySelectorAll('.factor-input');
+            factores.forEach((input, index) => {
+                const valor = parseInt(input.value) || 0;
+                
+                if (valor < 1 || valor > 3) {
+                    mostrarError(`factor${index}Error`);
+                    valido = false;
+                } else {
+                    ocultarError(`factor${index}Error`);
+                    totalPuntaje += valor;
+                    
+                    // Guardar factor con justificación si aplica
+                    const justificacion = document.getElementById(`justificacion${index}`)?.value || '';
+                    
+                    postulacionActual.evaluacion.push({
+                        factor: sistema.categorias[categoriaActual].factores[index],
+                        puntaje: valor,
+                        justificacion: valor === 3 ? justificacion : ''
+                    });
+                    
+                    // Validar justificación obligatoria para puntaje 3
+                    if (valor === 3 && !justificacion.trim()) {
+                        mostrarError(`justificacion${index}Error`);
+                        valido = false;
+                    } else {
+                        ocultarError(`justificacion${index}Error`);
+                    }
+                }
+            });
+            
+            // Validar sección especial para acción policial
+            if (categoriaActual === 'd3') {
+                const narracion = document.getElementById('narracionHecho').value;
+                const razones = document.getElementById('razonesFundamentacion').value;
+                
+                if (!narracion.trim()) {
+                    mostrarError('narracionError');
+                    valido = false;
+                } else {
+                    ocultarError('narracionError');
+                    postulacionActual.narracionHecho = narracion;
+                }
+                
+                if (!razones.trim()) {
+                    mostrarError('razonesError');
+                    valido = false;
+                } else {
+                    ocultarError('razonesError');
+                    postulacionActual.razonesFundamentacion = razones;
+                }
+            }
+            
+            // Guardar puntaje total
+            postulacionActual.totalPuntaje = totalPuntaje;
+            document.getElementById('totalPuntaje').value = totalPuntaje;
+            
+            return valido;
+        }
+        
+        function validarPaso5() {
+            const declaracion = document.getElementById('declaracionVeracidad').checked;
+            let valido = true;
+            
+            if (!declaracion) {
+                mostrarError('declaracionError');
+                valido = false;
+            } else {
+                ocultarError('declaracionError');
+                postulacionActual.declaracionVeracidad = true;
+            }
+            
+            return valido;
+        }
+        
+        // ===== VALIDACIÓN RUN CORREGIDA =====
+        function validarRUN(run) {
+            if (!run) return false;
+            
+            // Normalizar: quitar puntos, espacios y convertir a mayúsculas
+            run = run.replace(/\./g, '').replace(/\s/g, '').toUpperCase();
+            
+            // Validar formato básico
+            const regex = /^[0-9]{7,8}-[0-9K]$/;
+            if (!regex.test(run)) return false;
+            
+            // Extraer número y dígito verificador
+            const [num, dvIngresado] = run.split('-');
+            let suma = 0;
+            let multiplo = 2;
+            
+            // Calcular dígito verificador
+            for (let i = num.length - 1; i >= 0; i--) {
+                suma += parseInt(num[i]) * multiplo;
+                multiplo = multiplo === 7 ? 2 : multiplo + 1;
+            }
+            
+            const dv = 11 - (suma % 11);
+            let dvFinal = dv === 11 ? '0' : dv === 10 ? 'K' : dv.toString();
+            
+            return dvFinal === dvIngresado;
+        }
+        
+        function validarRUNCampo() {
+            const runInput = document.getElementById('run');
+            const runValue = runInput.value;
+            
+            if (!runValue) return;
+            
+            if (validarRUN(runValue)) {
+                runInput.classList.remove('error');
+                runInput.classList.add('success');
+                ocultarError('runError');
+            } else {
+                runInput.classList.remove('success');
+                runInput.classList.add('error');
+                mostrarError('runError');
+            }
+        }
+        
+        // ===== VALIDACIÓN DE ELEGIBILIDAD =====
+        function validarElegibilidad() {
+            const sanciones = document.getElementById('sanciones12meses')?.value;
+            const proceso = document.getElementById('procesoJudicial')?.value;
+            
+            let elegible = true;
+            let mensaje = '';
+            
+            if (sanciones === 'si') {
+                elegible = false;
+                mensaje += '• Tiene sanciones (días de arresto) en los últimos 12 meses\n';
+            }
+            
+            if (proceso === 'si_imputado') {
+                elegible = false;
+                mensaje += '• Está sometido a proceso judicial como formalizado/imputado\n';
+            }
+            
+            if (!elegible) {
+                mostrarAlerta('error', 
+                    '⚠️ NO ELEGIBLE SEGÚN ART. 8.7 OG 3125\n\n' + 
+                    mensaje + 
+                    '\nEl funcionario no cumple los requisitos de elegibilidad establecidos en el Manual.'
+                );
+            }
+            
+            return elegible;
+        }
+        
+        // ===== FUNCIONES DE ERROR CORREGIDAS =====
+        function mostrarError(id) {
+            const errorEl = document.getElementById(id);
+            const inputId = id.replace('Error', '');
+            const inputEl = document.getElementById(inputId);
+            
+            if (errorEl) {
+                errorEl.classList.add('show');
+            }
+            
+            if (inputEl) {
+                inputEl.classList.add('error');
+                inputEl.classList.remove('success');
+            }
+        }
+        
+        function ocultarError(id) {
+            const errorEl = document.getElementById(id);
+            const inputId = id.replace('Error', '');
+            const inputEl = document.getElementById(inputId);
+            
+            if (errorEl) {
+                errorEl.classList.remove('show');
+            }
+            
+            if (inputEl) {
+                inputEl.classList.remove('error');
+            }
+        }
+        
+        // ===== FUNCIÓN PARA CARGAR FACTORES =====
+        function cargarFactoresEvaluacion() {
+            const categoria = postulacionActual.categoria;
+            const factoresDiv = document.getElementById('factoresEvaluacion');
+            const titulo = document.getElementById('categoriaTitulo');
+            
+            if (!categoria) return;
+            
+            const categoriaInfo = sistema.categorias[categoria];
+            titulo.textContent = categoriaInfo.nombre;
+            
+            factoresDiv.innerHTML = '';
+            
+            categoriaInfo.factores.forEach((factor, index) => {
+                const factorDiv = document.createElement('div');
+                factorDiv.className = 'form-group';
+                factorDiv.innerHTML = `
+                    <label>${index + 1}. ${factor} <span class="required">*</span></label>
+                    <select class="form-control factor-input" id="factor${index}" 
+                            onchange="actualizarTotalPuntaje(); toggleJustificacion(${index})">
+                        <option value="0">-- Seleccione puntaje --</option>
+                        <option value="1">1 - Bueno</option>
+                        <option value="2">2 - Muy Bueno</option>
+                        <option value="3">3 - Excelente</option>
+                    </select>
+                    <div class="error-message" id="factor${index}Error">Seleccione un puntaje</div>
+                    <div id="justificacion${index}Div" class="hidden" style="margin-top: 10px;">
+                        <label>Justificación del puntaje excelente (requerida):</label>
+                        <textarea class="form-control" id="justificacion${index}" rows="3" 
+                                  placeholder="Explique por qué merece el puntaje máximo en este factor..."></textarea>
+                        <div class="error-message" id="justificacion${index}Error">Debe justificar el puntaje excelente</div>
+                    </div>
+                `;
+                factoresDiv.appendChild(factorDiv);
+            });
+            
+            // Mostrar/ocultar sección especial para acción policial
+            const seccionAccion = document.getElementById('seccionAccionPolicial');
+            if (categoria === 'd3') {
+                seccionAccion.classList.remove('hidden');
+            } else {
+                seccionAccion.classList.add('hidden');
+            }
+            
+            // Inicializar total
+            actualizarTotalPuntaje();
+        }
+        
+        function toggleJustificacion(index) {
+            const select = document.getElementById(`factor${index}`);
+            const justificacionDiv = document.getElementById(`justificacion${index}Div`);
+            
+            if (select.value === '3') {
+                justificacionDiv.classList.remove('hidden');
+            } else {
+                justificacionDiv.classList.add('hidden');
+                document.getElementById(`justificacion${index}Error`).classList.remove('show');
+            }
+        }
+        
+        function actualizarTotalPuntaje() {
+            const factores = document.querySelectorAll('.factor-input');
+            let total = 0;
+            
+            factores.forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            
+            document.getElementById('totalPuntaje').value = total;
+        }
+        
+        // ===== GENERAR RESUMEN FINAL =====
+        function generarResumen() {
+            const resumenDiv = document.getElementById('resumenPostulacion');
+            const alertDiv = document.getElementById('revisionAlert');
+            
+            // Validar elegibilidad final
+            let elegible = true;
+            let mensajesError = [];
+            let mensajesOk = [];
+            
+            // 1. Validar categoría
+            if (!postulacionActual.categoria) {
+                elegible = false;
+                mensajesError.push('❌ No se seleccionó categoría');
+                document.getElementById('valCategoria').innerHTML = '❌ Categoría no seleccionada';
+                document.getElementById('valCategoria').style.color = 'var(--rojo-error)';
+            } else {
+                mensajesOk.push('✅ Categoría seleccionada correctamente');
+                document.getElementById('valCategoria').innerHTML = '✓ Categoría seleccionada correctamente';
+                document.getElementById('valCategoria').style.color = 'var(--verde-ok)';
+            }
+            
+            // 2. Validar datos personales
+            if (!postulacionActual.run || !postulacionActual.nombres || !postulacionActual.apellidos) {
+                elegible = false;
+                mensajesError.push('❌ Datos personales incompletos');
+                document.getElementById('valDatos').innerHTML = '❌ Datos personales incompletos';
+                document.getElementById('valDatos').style.color = 'var(--rojo-error)';
+            } else {
+                mensajesOk.push('✅ Datos personales completos y válidos');
+                document.getElementById('valDatos').innerHTML = '✓ Datos personales completos y válidos';
+                document.getElementById('valDatos').style.color = 'var(--verde-ok)';
+            }
+            
+            // 3. Validar antecedentes
+            if (!postulacionActual.listaMeritos || !postulacionActual.sanciones12meses || !postulacionActual.procesoJudicial) {
+                elegible = false;
+                mensajesError.push('❌ Antecedentes incompletos');
+                document.getElementById('valAntecedentes').innerHTML = '❌ Antecedentes incompletos';
+                document.getElementById('valAntecedentes').style.color = 'var(--rojo-error)';
+            } else if (postulacionActual.sanciones12meses === 'si' || postulacionActual.procesoJudicial === 'si_imputado') {
+                elegible = false;
+                mensajesError.push('❌ No cumple requisitos de elegibilidad (Art. 8.7)');
+                document.getElementById('valAntecedentes').innerHTML = '❌ No cumple requisitos Art. 8.7';
+                document.getElementById('valAntecedentes').style.color = 'var(--rojo-error)';
+            } else {
+                mensajesOk.push('✅ Antecedentes validados según Art. 8.7');
+                document.getElementById('valAntecedentes').innerHTML = '✓ Antecedentes validados según Art. 8.7';
+                document.getElementById('valAntecedentes').style.color = 'var(--verde-ok)';
+            }
+            
+            // 4. Validar evaluación
+            if (!postulacionActual.evaluacion || postulacionActual.evaluacion.length === 0) {
+                elegible = false;
+                mensajesError.push('❌ Evaluación incompleta');
+                document.getElementById('valEvaluacion').innerHTML = '❌ Evaluación incompleta';
+                document.getElementById('valEvaluacion').style.color = 'var(--rojo-error)';
+            } else {
+                const categoria = postulacionActual.categoria;
+                const puntajeMinimo = sistema.categorias[categoria]?.puntajeMinimo || 10;
+                
+                if (postulacionActual.totalPuntaje < puntajeMinimo) {
+                    elegible = false;
+                    mensajesError.push(`❌ Puntaje insuficiente (mínimo ${puntajeMinimo} puntos)`);
+                    document.getElementById('valEvaluacion').innerHTML = `❌ Puntaje insuficiente (${postulacionActual.totalPuntaje}/${puntajeMinimo})`;
+                    document.getElementById('valEvaluacion').style.color = 'var(--rojo-error)';
+                } else {
+                    mensajesOk.push(`✅ Evaluación completa (${postulacionActual.totalPuntaje} puntos)`);
+                    document.getElementById('valEvaluacion').innerHTML = `✓ Evaluación completa (${postulacionActual.totalPuntaje} puntos)`;
+                    document.getElementById('valEvaluacion').style.color = 'var(--verde-ok)';
+                }
+            }
+            
+            // 5. Validar elegibilidad final
+            document.getElementById('valElegibilidad').innerHTML = elegible ? 
+                '✓ Cumple requisitos de elegibilidad' : '❌ No cumple requisitos de elegibilidad';
+            document.getElementById('valElegibilidad').style.color = elegible ? 'var(--verde-ok)' : 'var(--rojo-error)';
+            
+            // Configurar alerta
+            if (elegible) {
+                alertDiv.className = 'alert alert-success show';
+                alertDiv.innerHTML = `
+                    <strong>✅ POSTULACIÓN VÁLIDA</strong><br>
+                    Cumple con todos los requisitos de la Orden General N° 3125
+                `;
+            } else {
+                alertDiv.className = 'alert alert-danger show';
+                alertDiv.innerHTML = `
+                    <strong>❌ POSTULACIÓN NO VÁLIDA</strong><br>
+                    No cumple con los requisitos:<br>
+                    ${mensajesError.map(m => `<div style="margin-left: 20px;">${m}</div>`).join('')}
+                `;
+            }
+            
+            // Activar/desactivar botón enviar (CORRECCIÓN APLICADA)
+            document.getElementById('btnEnviar').disabled = !elegible;
+            
+            // Generar tabla de resumen
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <tr>
+                            <th colspan="2" style="background: var(--azul-carabineros); color: white;">
+                                RESUMEN DE POSTULACIÓN
+                            </th>
+                        </tr>
+                        <tr>
+                            <td style="width: 30%;"><strong>Categoría</strong></td>
+                            <td>${postulacionActual.categoriaNombre || 'No definida'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Funcionario</strong></td>
+                            <td>
+                                ${postulacionActual.nombres || ''} ${postulacionActual.apellidos || ''}<br>
+                                <small>RUN: ${postulacionActual.run || 'No ingresado'} | 
+                                Grado: ${postulacionActual.grado || 'No ingresado'}</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unidad</strong></td>
+                            <td>
+                                ${postulacionActual.altaReparticion || ''} > 
+                                ${postulacionActual.reparticion || ''}<br>
+                                <small>Dotación: ${postulacionActual.dotacion || ''}</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Antecedentes</strong></td>
+                            <td>
+                                Lista: ${postulacionActual.listaMeritos === 'lista1' ? 'N°1 Méritos' : 
+                                       postulacionActual.listaMeritos === 'lista2' ? 'N°2 Satisfactorios' : 'No especificada'}<br>
+                                Sanciones 12 meses: ${postulacionActual.sanciones12meses === 'si' ? 'SÍ ⚠️' : 'NO ✅'}<br>
+                                Proceso judicial: ${postulacionActual.procesoJudicial ? 
+                                    postulacionActual.procesoJudicial.replace('si_imputado', 'SÍ (imputado) ⚠️')
+                                               .replace('si_victima', 'Sí (víctima)')
+                                               .replace('no', 'NO ✅') : 'No especificado'}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Evaluación</strong></td>
+                            <td>
+                                Total Puntaje: <strong>${postulacionActual.totalPuntaje || 0}</strong><br>
+                                Factores evaluados: ${postulacionActual.evaluacion?.length || 0}<br>
+                                <small style="color: ${postulacionActual.totalPuntaje >= (sistema.categorias[postulacionActual.categoria]?.puntajeMinimo || 10) ? 'green' : 'red'}">
+                                    ${postulacionActual.totalPuntaje >= (sistema.categorias[postulacionActual.categoria]?.puntajeMinimo || 10) ? 
+                                      '✅ Cumple puntaje mínimo' : '❌ No cumple puntaje mínimo'}
+                                </small>
+                            </td>
+                        </tr>
+                        ${postulacionActual.narracionHecho ? `
+                        <tr>
+                            <td><strong>Narración</strong></td>
+                            <td><em>"${postulacionActual.narracionHecho.substring(0, 100)}..."</em></td>
+                        </tr>
+                        ` : ''}
+                    </table>
+                </div>
+            `;
+            
+            resumenDiv.innerHTML = html;
+        }
+        
+        // ===== ENVIAR POSTULACIÓN =====
+        function enviarPostulacion() {
+            if (!validarPaso(5)) {
+                mostrarAlerta('error', 'Debe aceptar la declaración de veracidad');
+                return;
+            }
+            
+            // Generar ID único
+            const timestamp = new Date().getTime();
+            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const postulacionId = `POST-${timestamp.toString().slice(-6)}-${random}`;
+            
+            // Completar objeto de postulación
+            postulacionActual.id = postulacionId;
+            postulacionActual.fechaEnvio = new Date().toLocaleString('es-CL', {
+                timeZone: 'America/Santiago'
+            });
+            postulacionActual.estado = 'COMPLETA CONFORME OG 3125';
+            postulacionActual.version = '1.0';
+            
+            // Guardar en "base de datos"
+            sistema.postulaciones.push(JSON.parse(JSON.stringify(postulacionActual)));
+            
+            try {
+                localStorage.setItem('postulacionesCarabinerosOG3125', JSON.stringify(sistema.postulaciones));
+            } catch (error) {
+                console.error('Error guardando en localStorage:', error);
+                mostrarAlerta('error', 'Error al guardar la postulación');
+                return;
+            }
+            
+            // Mostrar confirmación
+            document.getElementById('postulacionId').textContent = postulacionId;
+            document.getElementById('postulacionFecha').textContent = postulacionActual.fechaEnvio;
+            document.getElementById('confirmModal').classList.add('active');
+            
+            // Opcional: Log de auditoría
+            console.log(`Postulación ${postulacionId} guardada exitosamente`);
+        }
+        
+        function nuevaPostulacion() {
+            // Reiniciar formulario
+            document.querySelectorAll('input, select, textarea').forEach(element => {
+                if (element.type !== 'button' && element.type !== 'submit') {
+                    element.value = '';
+                    element.classList.remove('error', 'success');
+                    
+                    if (element.type === 'checkbox') {
+                        element.checked = false;
+                    }
+                }
+            });
+            
+            // Reiniciar errores
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+            });
+            
+            // Reiniciar estado
+            currentStep = 1;
+            postulacionActual = { evaluacion: [] };
+            
+            // Reiniciar interfaz
+            document.querySelectorAll('.step-content').forEach(div => {
+                div.classList.remove('active');
+            });
+            document.getElementById('stepContent1').classList.add('active');
+            
+            // Reiniciar progreso
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index === 0) {
+                    step.classList.add('active');
+                }
+            });
+            
+            // Ocultar alertas
+            document.getElementById('globalAlert').classList.remove('show');
+            document.getElementById('revisionAlert').classList.remove('show');
+            
+            // Habilitar botón enviar
+            document.getElementById('btnEnviar').disabled = false;
+            
+            // Reiniciar grados
+            cargarGrados();
+            
+            closeModal();
+            
+            mostrarAlerta('success', 'Nueva postulación iniciada. Complete los datos desde el principio.');
+        }
+        
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+        
+        // ===== FUNCIONES AUXILIARES =====
+        function mostrarAlerta(tipo, mensaje) {
+            const alertDiv = document.getElementById('globalAlert');
+            
+            alertDiv.className = `alert alert-${tipo} show`;
+            alertDiv.innerHTML = mensaje;
+            
+            // Auto-ocultar después de 5 segundos
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+            }, 5000);
+        }
+        
+        // ===== EXPORTAR DATOS (OPCIONAL) =====
+        function exportarPostulaciones() {
+            if (sistema.postulaciones.length === 0) {
+                mostrarAlerta('warning', 'No hay postulaciones para exportar');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(sistema.postulaciones, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `postulaciones_carabineros_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+    </script>
+</body>
+</html>
