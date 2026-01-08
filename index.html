@@ -710,21 +710,23 @@
                         <div class="form-group">
                             <label>RUN <span class="required">*</span></label>
                             <input type="text" id="run" class="form-control" placeholder="12.345.678-9" 
-                                   onblur="validarRUNCampo()">
+                                   oninput="formatearRUNCampo(this)" onblur="validarRUNCampo()">
                             <div class="error-message" id="runError">RUN inválido. Formato: 12.345.678-9</div>
                         </div>
                         
                         <!-- NOMBRES -->
                         <div class="form-group">
                             <label>Nombres <span class="required">*</span></label>
-                            <input type="text" id="nombres" class="form-control" placeholder="JUAN CARLOS">
+                            <input type="text" id="nombres" class="form-control" placeholder="JUAN CARLOS" 
+                                   oninput="this.value = this.value.toUpperCase()">
                             <div class="error-message" id="nombresError">Debe ingresar los nombres</div>
                         </div>
                         
                         <!-- APELLIDOS -->
                         <div class="form-group">
                             <label>Apellidos <span class="required">*</span></label>
-                            <input type="text" id="apellidos" class="form-control" placeholder="PÉREZ GONZÁLEZ">
+                            <input type="text" id="apellidos" class="form-control" placeholder="PÉREZ GONZÁLEZ" 
+                                   oninput="this.value = this.value.toUpperCase()">
                             <div class="error-message" id="apellidosError">Debe ingresar los apellidos</div>
                         </div>
                         
@@ -1144,9 +1146,13 @@
             // ===== GRADOS CORREGIDOS SEGÚN MANUAL =====
             gradosPorNombramiento: {
                 PNS: [
-                    "Subteniente", "Teniente", "Capitán", "Mayor", 
-                    "Teniente Coronel", "Coronel", "General de Brigada",
-                    "General de División", "General Director"
+                    "Subteniente", 
+                    "Teniente", 
+                    "Capitán", 
+                    "Mayor", 
+                    "Teniente Coronel", 
+                    "Coronel", 
+                    "General"
                 ],
                 PNI: [
                     "Carabinero", "Cabo 2°", "Cabo 1°", "Sargento 2°", 
@@ -1166,6 +1172,58 @@
         let postulacionActual = {
             evaluacion: []
         };
+        
+        // ===== FUNCIONES DE FORMATO AUTOMÁTICO =====
+        function formatearRUN(run) {
+            if (!run) return '';
+            
+            // Remover todo excepto números y letra K
+            let runLimpio = run.replace(/[^0-9kK]/g, '').toUpperCase();
+            
+            if (runLimpio.length < 2) return runLimpio;
+            
+            // Si tiene más de 9 caracteres (8 dígitos + DV), truncar
+            if (runLimpio.length > 9) {
+                runLimpio = runLimpio.substring(0, 9);
+            }
+            
+            // Separar número y DV
+            let numero = runLimpio.slice(0, -1);
+            let dv = runLimpio.slice(-1);
+            
+            // Formatear número con puntos si tiene al menos 7 dígitos
+            if (numero.length >= 7) {
+                // Insertar puntos cada 3 dígitos desde el final
+                let numeroFormateado = '';
+                let contador = 0;
+                
+                for (let i = numero.length - 1; i >= 0; i--) {
+                    numeroFormateado = numero[i] + numeroFormateado;
+                    contador++;
+                    if (contador === 3 && i > 0) {
+                        numeroFormateado = '.' + numeroFormateado;
+                        contador = 0;
+                    }
+                }
+                
+                numero = numeroFormateado;
+            }
+            
+            return numero + '-' + dv;
+        }
+        
+        function formatearRUNCampo(input) {
+            const valorOriginal = input.value;
+            const cursorPos = input.selectionStart;
+            
+            // Obtener el nuevo valor formateado
+            const valorFormateado = formatearRUN(valorOriginal);
+            input.value = valorFormateado;
+            
+            // Intentar mantener la posición del cursor
+            const cambio = valorFormateado.length - valorOriginal.length;
+            input.setSelectionRange(cursorPos + cambio, cursorPos + cambio);
+        }
         
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', function() {
@@ -1436,13 +1494,30 @@
         function validarPaso2() {
             let valido = true;
             
-            // Validar RUN (CORRECCIÓN APLICADA)
-            const run = document.getElementById('run').value;
+            // Limpiar errores previos
+            ocultarError('runError');
+            ocultarError('nombresError');
+            ocultarError('apellidosError');
+            ocultarError('nombramientoError');
+            ocultarError('gradoError');
+            ocultarError('altaRepError');
+            ocultarError('reparticionError');
+            ocultarError('dotacionError');
+            
+            // Validar RUN (CON FORMATO AUTOMÁTICO)
+            const runInput = document.getElementById('run');
+            let run = runInput.value;
+            
+            // Asegurarse de que el RUN esté formateado
+            if (run) {
+                run = formatearRUN(run);
+                runInput.value = run; // Actualizar campo con formato
+            }
+            
             if (!validarRUN(run)) {
                 mostrarError('runError');
                 valido = false;
             } else {
-                ocultarError('runError');
                 postulacionActual.run = run;
             }
             
@@ -1474,6 +1549,11 @@
         function validarPaso3() {
             let valido = true;
             
+            // Limpiar errores previos
+            ocultarError('listaError');
+            ocultarError('sancionesError');
+            ocultarError('procesoError');
+            
             const campos = [
                 { id: 'listaMeritos', error: 'listaError' },
                 { id: 'sanciones12meses', error: 'sancionesError' },
@@ -1491,7 +1571,7 @@
                 }
             });
             
-            // Validar elegibilidad (CORRECCIÓN APLICADA)
+            // Validar elegibilidad
             if (!validarElegibilidad()) {
                 valido = false;
             }
@@ -1592,15 +1672,20 @@
         function validarRUN(run) {
             if (!run) return false;
             
-            // Normalizar: quitar puntos, espacios y convertir a mayúsculas
-            run = run.replace(/\./g, '').replace(/\s/g, '').toUpperCase();
+            // Asegurar formato correcto antes de validar
+            run = formatearRUN(run);
             
             // Validar formato básico
-            const regex = /^[0-9]{7,8}-[0-9K]$/;
+            const regex = /^[0-9]{1,3}(?:\.[0-9]{3}){2}-[0-9K]$/;
             if (!regex.test(run)) return false;
             
             // Extraer número y dígito verificador
-            const [num, dvIngresado] = run.split('-');
+            const [numConPuntos, dvIngresado] = run.split('-');
+            const num = numConPuntos.replace(/\./g, '');
+            
+            // Verificar longitud del número
+            if (num.length < 7 || num.length > 8) return false;
+            
             let suma = 0;
             let multiplo = 2;
             
@@ -1618,9 +1703,13 @@
         
         function validarRUNCampo() {
             const runInput = document.getElementById('run');
-            const runValue = runInput.value;
+            let runValue = runInput.value;
             
             if (!runValue) return;
+            
+            // Aplicar formato automático
+            runValue = formatearRUN(runValue);
+            runInput.value = runValue;
             
             if (validarRUN(runValue)) {
                 runInput.classList.remove('error');
@@ -1963,7 +2052,7 @@
             postulacionActual.estado = 'COMPLETA CONFORME OG 3125';
             postulacionActual.version = '1.0';
             
-            // Preparar datos para Google Sheets
+            // Preparar datos para Google Sheets - CORREGIDO para formato correcto
             const datosParaSheet = [
                 postulacionActual.id,
                 postulacionActual.fechaEnvio,
@@ -1981,11 +2070,11 @@
                 postulacionActual.listaMeritos,
                 postulacionActual.sanciones12meses,
                 postulacionActual.procesoJudicial,
-                postulacionActual.amonestaciones,
-                postulacionActual.reprensiones,
-                postulacionActual.arrestos,
-                postulacionActual.licenciaActo,
-                postulacionActual.totalPuntaje,
+                postulacionActual.amonestaciones || 0,
+                postulacionActual.reprensiones || 0,
+                postulacionActual.arrestos || 0,
+                postulacionActual.licenciaActo || 0,
+                postulacionActual.totalPuntaje || 0,
                 JSON.stringify(postulacionActual.evaluacion || []),
                 postulacionActual.narracionHecho || '',
                 postulacionActual.razonesFundamentacion || '',
@@ -1993,28 +2082,35 @@
             ];
             
             try {
-                // Enviar a Google Sheets
+                // Enviar a Google Sheets - CORREGIDO para evitar problemas de CORS
                 mostrarAlerta('info', 'Enviando datos a Google Sheets...');
                 
+                // Crear FormData para envío correcto
+                const formData = new FormData();
+                formData.append('action', 'insertarPostulacion');
+                formData.append('datos', JSON.stringify(datosParaSheet));
+                formData.append('timestamp', new Date().toISOString());
+                
+                // Usar fetch sin 'no-cors' para poder verificar respuesta
                 const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // IMPORTANTE: Google Apps Script requiere no-cors
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: JSON.stringify({
-                        action: 'insertarPostulacion',
-                        datos: datosParaSheet,
-                        timestamp: new Date().toISOString()
-                    })
+                    body: formData
                 });
                 
-                // Guardar localmente como respaldo
-                sistema.postulaciones.push(JSON.parse(JSON.stringify(postulacionActual)));
-                localStorage.setItem('postulacionesCarabinerosOG3125', JSON.stringify(sistema.postulaciones));
-                
-                // Mostrar confirmación exitosa
-                mostrarConfirmacionExito(postulacionId);
+                // Verificar si la respuesta es OK
+                if (response.ok) {
+                    const result = await response.text();
+                    console.log('Respuesta Google Sheets:', result);
+                    
+                    // Guardar localmente como respaldo
+                    sistema.postulaciones.push(JSON.parse(JSON.stringify(postulacionActual)));
+                    localStorage.setItem('postulacionesCarabinerosOG3125', JSON.stringify(sistema.postulaciones));
+                    
+                    // Mostrar confirmación exitosa
+                    mostrarConfirmacionExito(postulacionId);
+                } else {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
                 
             } catch (error) {
                 console.error('Error enviando a Google Sheets:', error);
@@ -2034,6 +2130,7 @@
             } finally {
                 // Restaurar botón
                 btnEnviar.innerHTML = originalText;
+                btnEnviar.disabled = false;
             }
         }
         
